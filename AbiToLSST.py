@@ -15,7 +15,9 @@ import math
 #
 # Date string is expected to be like: 2008-04-25T21:37:20
 def calcMJD(dateStr):
-    timeTuple = time.strptime(dateStr, '%Y-%m-%dT%H:%M:%S')
+    stripFracSecRE = re.compile(r'([^\.]+)')
+    match = stripFracSecRE.match(dateStr)
+    timeTuple = time.strptime(match.group(1), '%Y-%m-%dT%H:%M:%S')
     dateStrForEphem = time.strftime('%Y/%m/%d %H:%M:%S', timeTuple)
     dayNum = ephem.Date(dateStrForEphem)
     return dayNum + 15019.5
@@ -173,10 +175,11 @@ debug = 0
 mySqlHost = 'lsst10.ncsa.uiuc.edu'
 mySqlUser = 'test'
 mySqlPasswd = 'globular.test'
-mySqlDb = 'ctio_apr08C'
+
 # get input args
-photDir = sys.argv[1]
-exposureListFileName = sys.argv[2]
+mySqlDb = sys.argv[1]
+photDir = sys.argv[2]
+exposureListFileName = sys.argv[3]
 exposureListFile = open(exposureListFileName, "w")
 
 
@@ -196,17 +199,15 @@ for headFile in headList:
     obsNumMatch = obsNumRE.match(headFile)
     obsNum = int(obsNumMatch.group(1))
     # get values we need from headFile
-    (raHMS, decDMS, filtName, date, am, exp, epoch) = getValues(headFile,
-          ['RA', 'DEC', 'FILTER2', 'DATE', 'AIRMASS', 'EXPTIME', 'EPOCH'])
-    raDeg = ephem.hours(raHMS)*180.0/math.pi
-    decDeg = ephem.degrees(decDMS)*180.0/math.pi
+    (raDeg, decDeg, filtName, date, am, exp, epoch) = getValues(headFile,
+          ['CRVAL1', 'CRVAL2', 'FILTER2', 'DATE-OBS', 'AIRMASS', 'EXPTIME', 'EPOCH'])
     # calculate MJD from date
     mjd = calcMJD(date)
     filtNum = lookupFilter(filtName)
-    print >>exposureListFile, obsNum, raDeg, decDeg, filtName, mjd, date, float(am), float(exp), float(epoch)
+    print >>exposureListFile, obsNum, float(raDeg), float(decDeg), filtName, mjd, date, float(am), float(exp), float(epoch)
     if insertCmd[-1] == ')':
         insertCmd += ','
-    insertCmd += '(%d, %.5f, %.5f, %d, %.7f, \'%s\', %.5f, %.2f, %.2f)' % (obsNum, raDeg, decDeg, filtNum, float(epoch), date, mjd, float(exp), float(am))
+    insertCmd += '(%d, %.7f, %.7f, %d, %.7f, \'%s\', %.5f, %.2f, %.2f)' % (obsNum, float(raDeg), float(decDeg), filtNum, float(epoch), date, mjd, float(exp), float(am))
     # must pass obsNum and filtNum to createDIASourceTable
     filtNum = lookupFilter(filtName)
     createDIASourceTable(obsNum, filtNum, catFile, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)
