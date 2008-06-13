@@ -35,7 +35,7 @@ c.execute("""SELECT objectId, gMag, rMag, iMag, zMag, gNumObs, rNumObs, iNumObs,
 objList = c.fetchall()
 
 # print column header line, to be read by R prog findGray.r
-print "Name ObjFiltId Time Flux"
+print "Name ObjFiltId Time Flux FluxErr"
 
 oFCount = 0
 for o in objList:
@@ -61,13 +61,16 @@ for o in objList:
         airMass = s[2]
         filterId = s[3]
         mag = s[4]
+        magErr = s[5]
         if goodFilters[filterId]:
             if objIdByFilter[filterId] == -1:
                 objIdByFilter[filterId] = oFCount;
                 oFCount += 1;
             correctedMag = mag - extinction[filterId]*airMass
+            correctedFlux = 10**(-0.4*correctedMag)
             flux = 10**(-0.4*mag)
-            print sourceId, objIdByFilter[filterId], mjd, flux
+            fluxErr = flux*(1.0 - 10**(-0.4*magErr))
+            print sourceId, objIdByFilter[filterId], mjd, correctedFlux, fluxErr
 
         
 

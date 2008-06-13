@@ -7,7 +7,11 @@ findGray.utils <- function(lcDataFile) {
 	tGrid <- 0
 	kGray <- 0
 	fluxMean <- array(0, c(nObjFilt))
-	fluxSigma <- array(0, c(nObjFilt))
+	fluxInvSigma <- array(0, c(nLcPoints))
+
+# use the inverse fluxErr for computational efficiency
+	fluxInvSigma <- 1.0/data$FluxErr
+
 	deltas <- 0
 	cdf <- 0
 	cdfGrid <- seq(-10.0, 10.0, 0.05)
@@ -46,6 +50,7 @@ findGray.utils <- function(lcDataFile) {
 			for (n in 1:nObjFilt) {
 				t <- data$Time[idxObjFilt[[n]]]
 				flux <- data$Flux[idxObjFilt[[n]]]
+				invSigma <- fluxInvSigma[idxObjFilt[[n]]]
 				maxFlux = max(flux)
 				iseq = 1:length(t)
 				for (i in 1:length(t)) {
@@ -53,8 +58,8 @@ findGray.utils <- function(lcDataFile) {
 					tdiff <- abs(tGrid - t[i])
 					idx = rank(tdiff)==1
 					k = iseq[idx]
-					navg[k] <- navg[k] + 1
-					kGray[k] <<- kGray[k] + flux[i]/maxFlux
+					navg[k] <- navg[k] + invSigma[i]
+					kGray[k] <<- kGray[k] + flux[i]/maxFlux * invSigma[i]
 				}
 			}
 			kGray <<- kGray / navg
@@ -64,23 +69,6 @@ findGray.utils <- function(lcDataFile) {
 			return(approxfun(tGrid, kGray))
 		},
 
-		getKgrayRaw = function() {
-			return(kGray)
-		},
-#
-# calculate for each objFilt the median and mad
-#
-		calcMeanSigma = function() {
-			for (n in 1:nObjFilt) {
-				fluxMean[n] <<- mean(data$Flux[idxObjFilt[[n]]])
-				fluxSigma[n] <<- mad(data$Flux[idxObjFilt[[n]]])
-			}
-				
-		},
-
-		getMeanSigma = function() {
-			return(array(c(fluxMean, fluxSigma), c(nObjFilt,2)))
-		},
 #
 # given the vector kGrayArg, which specifies kGray at the time points in tGrid,
 # calculate the merit function.
@@ -92,9 +80,9 @@ findGray.utils <- function(lcDataFile) {
 			for (n in 1:nObjFilt) {
 				idx <- idxObjFilt[[n]]
 				fluxMean[n] <<- mean(fluxCorr[idx])
-# Do NOT change sigma		fluxSigma[n] <<- mad(fluxCorr[idx])
-				deltas[idx] <<- (fluxCorr[idx] - fluxMean[n])/fluxSigma[n]
+				deltas[idx] <<- (fluxCorr[idx] - fluxMean[n])
 			}
+			deltas <<- deltas * fluxInvSigma
 			cdf <<- ecdf(deltas)
 			xcdf <- mget("x",environment(cdf))
 			xcdfvals <- xcdf$x
