@@ -12,7 +12,12 @@ import math
 import MySQLdb
 #
 # minObs is the minimum number of obs for an object and filter to use it for gray determination
-minObs = 3
+
+mingObs = 999
+minrObs = 10
+miniObs = 999
+minzObs = 999
+
 # set up default extinction table, order is u, g, r, i, z, y
 extinction = [0.4, 0.15, 0.06, 0.06, 0.06, 0.06]
 
@@ -47,10 +52,10 @@ for o in objList:
     # Selection on mags or xNumObs goes here ... later
     goodFilters = [0, 0, 0, 0, 0, 0]
     objIdByFilter = [-1, -1, -1, -1, -1, -1]
-    goodFilters[1] = (gNumObs > minObs)
-    goodFilters[2] = (rNumObs > minObs)
-    goodFilters[3] = (iNumObs > minObs)
-    goodFilters[4] = (zNumObs > minObs)
+    goodFilters[1] = (gNumObs > mingObs)
+    goodFilters[2] = (rNumObs > minrObs)
+    goodFilters[3] = (iNumObs > miniObs)
+    goodFilters[4] = (zNumObs > minzObs)
     
     c.execute("""SELECT ds.diaSourceId, ex.mjdObs, ex.airmass, ds.filterId, ds.psfMag, ds.psfMagErr from DIASource as ds, \
               Raw_FPA_Exposure as ex WHERE ds.objectId = %s AND ex.rawFPAExposureId = ds.ccdExposureId""", (objectId,))

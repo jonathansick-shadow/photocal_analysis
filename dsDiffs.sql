@@ -1,0 +1,1 @@
+select ds1.diaSourceId, ds2.diaSourceId, ds1.rowc, ds1.colc, ds1.modelMag-ds2.ModelMag from DIA_v as ds1, DIA_v as ds2 where ds1.ccdExposureId=1095 and ds2.ccdExposureId=1083 and ds1.objectId=ds2.objectId into outfile '/tmp/ds_1095_1083.tab';
