@@ -10,6 +10,7 @@ import string, sys, os
 import glob
 import re
 import math
+from numarray.numarraycore import array
 import MySQLdb
 
 def getLC(mySqlDb, objectId, filter):
@@ -32,20 +33,20 @@ def getLC(mySqlDb, objectId, filter):
     #
     # Get the needed objects
     #
-    query = "SELECT ex.mjdObs, ds.psfMag, ds.modelMag from DIASource as ds, Raw_FPA_Exposure as ex  where ds.objectId=%s and ds.filterId=%d and ex.rawFPAExposureId=ds.ccdExposureId" % (objectId, filterId)
+    query = "SELECT ex.mjdObs, ds.modelMag, ds.apMag from DIASource as ds, Raw_FPA_Exposure as ex  where ds.objectId=%s and ds.filterId=%d and ex.rawFPAExposureId=ds.ccdExposureId" % (objectId, filterId)
     
     c.execute(query)
     
     srcList = c.fetchall()
     mjd = []
-    instMag = []
-    corrMag = []
+    corr1Mag = []
+    corr2Mag = []
     for s in srcList:
         mjd.append(s[0])
-        instMag.append(s[1])
-        corrMag.append(s[2])
+        corr1Mag.append(s[1])
+        corr2Mag.append(s[2])
         
-    return (mjd, instMag, corrMag)
+    return (array(mjd), array(corr1Mag), array(corr2Mag))
 
 
 
