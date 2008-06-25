@@ -49,7 +49,7 @@ c.execute(query)
 
 for e in expList:
     exp = e[0]
-    query = "SELECT ds1.diaSourceId, ds1.colc, ds1.rowc, ds1.modelMag-ds2.ModelMag FROM DIASource as ds1, DIASource as ds2 where ds1.ccdExposureId=%s and ds2.ccdExposureId=%s and ds1.objectId=ds2.objectId" % (exp, refExp)
+    query = "SELECT ds1.diaSourceId, ds1.colc, ds1.rowc, ds1.modelMag-ds2.ModelMag, ds1.psfMagErr, ds2.psfMagErr FROM DIASource as ds1, DIASource as ds2 where ds1.ccdExposureId=%s and ds2.ccdExposureId=%s and ds1.objectId=ds2.objectId" % (exp, refExp)
     c.execute(query)
     surfPoints = c.fetchall()
     py_id = []
@@ -57,12 +57,14 @@ for e in expList:
     py_y = []
     py_xy = []
     py_delta = []
+    py_wt = []
     for point in surfPoints:
         py_id.append(point[0])
         py_x.append(float(point[1]))
         py_y.append(float(point[2]))
         py_xy.append(float(point[1])*float(point[2]))
         py_delta.append(float(point[3]))
+        py_wt.append(1./(float(point[4])**2 + float(point[5])**2))
         # py_sigma.append() rss of two sigmas?
 
     # Now need to evaluate poly's at py_x and py_y, insert into DIA_Poly
@@ -89,7 +91,7 @@ for e in expList:
     c.execute(query)
 
     
-    model = r.lm(r("delta ~ poly(x, 2) + poly(y, 2) + poly(x*y, 1)"), data=r.data_frame(x=py_x, y=py_y, delta=py_delta))
+    model = r.lm(r("delta ~ poly(x, 2) + poly(y, 2) + poly(x*y, 1)"), data=r.data_frame(x=py_x, y=py_y, delta=py_delta), weights=py_wt)
     model_summary = r.summary(model)
     model_coeff = model_summary['coefficients']
     c0 = model_coeff[0][0]
