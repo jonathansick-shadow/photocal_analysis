@@ -1,0 +1,1 @@
+SELECT o.objectId, o.rMag, sum( pow((ds.apMag - o.rMag) / ds.psfMagErr, 2))/o.rNumObs from Object as o, DIASource as ds WHERE ds.objectId = o.objectId AND ds.filterId=2 GROUP BY o.objectId into outfile '/tmp/rchiSq.tab';
