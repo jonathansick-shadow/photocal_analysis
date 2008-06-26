@@ -52,6 +52,11 @@ for e in expList:
     query = "SELECT ds1.diaSourceId, ds1.colc, ds1.rowc, ds1.modelMag-ds2.ModelMag, ds1.psfMagErr, ds2.psfMagErr FROM DIASource as ds1, DIASource as ds2 where ds1.ccdExposureId=%s and ds2.ccdExposureId=%s and ds1.objectId=ds2.objectId" % (exp, refExp)
     c.execute(query)
     surfPoints = c.fetchall()
+    # The field for exp may have no overlap with refExp.  If not, ignore
+    if len(surfPoints) < 20:
+        print "Ignoring exposure %s" % exp
+        continue
+    
     py_id = []
     py_x = []
     py_y = []
@@ -93,7 +98,11 @@ for e in expList:
     
     model = r.lm(r("delta ~ poly(x, 2) + poly(y, 2) + poly(x*y, 1)"), data=r.data_frame(x=py_x, y=py_y, delta=py_delta), weights=py_wt)
     model_summary = r.summary(model)
-    model_coeff = model_summary['coefficients']
+    model_coeff = array(model_summary['coefficients'])
+    if not model_coeff.shape == (6,4):
+        print "Bad model for %s" % exp
+        continue
+    
     c0 = model_coeff[0][0]
     c0_sigma = model_coeff[0][1]
     cx1 = model_coeff[1][0]
@@ -107,9 +116,9 @@ for e in expList:
     cxy = model_coeff[5][0]
     cxy_sigma = model_coeff[5][1]
     if values: values = values + ","
-    values = values + "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" % (exp, c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma)
+    values = values + "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" % (exp, refExp, c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma)
 
-query = "TRUNCATE Gray_Surf; INSERT INTO Gray_Surf (ccdExposureId, c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma ) VALUES " + values
+query = "TRUNCATE Gray_Surf; INSERT INTO Gray_Surf (ccdExposureId, refExposureId, c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma ) VALUES " + values
 #print query
 c.execute(query)
 
