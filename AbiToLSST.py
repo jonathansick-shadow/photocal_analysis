@@ -181,7 +181,7 @@ mySqlDb = sys.argv[1]
 photDir = sys.argv[2]
 exposureListFileName = sys.argv[3]
 exposureListFile = open(exposureListFileName, "w")
-
+insertCmdFile = open("insertCmd", "w")
 
 
 # regexp to get file root from .head file
@@ -193,6 +193,7 @@ obsNumRE = re.compile(r'.*n(\d+).head')
 
 zero = 0.0
 insertCmd = 'INSERT INTO Raw_FPA_Exposure (rawFPAExposureId, ra, decl, filterId, equinox, dateObs, mjdObs, expTime, airmass) VALUES '
+insertVals = ''
 headList = glob.glob(photDir + '/*.head')
 for headFile in headList:
     catFile = headSuffixRE.sub('.rdcap', headFile)
@@ -205,13 +206,13 @@ for headFile in headList:
     mjd = calcMJD(date)
     filtNum = lookupFilter(filtName)
     print >>exposureListFile, obsNum, float(raDeg), float(decDeg), filtName, mjd, date, float(am), float(exp), float(epoch)
-    if insertCmd[-1] == ')':
-        insertCmd += ','
-    insertCmd += '(%d, %.7f, %.7f, %d, %.7f, \'%s\', %.5f, %.2f, %.2f)' % (obsNum, float(raDeg), float(decDeg), filtNum, float(epoch), date, mjd, float(exp), float(am))
+    if not insertVals == '':
+        insertVals += ','
+    insertVals += '(%d, %.7f, %.7f, %d, %.7f, \'%s\', %.5f, %.2f, %.2f)' % (obsNum, float(raDeg), float(decDeg), filtNum, float(epoch), date, mjd, float(exp), float(am))
     # must pass obsNum and filtNum to createDIASourceTable
-    filtNum = lookupFilter(filtName)
     createDIASourceTable(obsNum, filtNum, catFile, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)
     createMopsPredTable(obsNum)
 
-if debug: print insertCmd
+insertCmd += insertVals
+if debug: print >>insertCmdFile, insertCmd
 if not debug: execQuery(insertCmd, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)

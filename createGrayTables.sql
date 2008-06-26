@@ -1,5 +1,6 @@
 create table Gray_Surf (
 	ccdExposureId BIGINT NOT NULL,
+	refExposureId BIGINT NOT NULL,
 	c0 DOUBLE NOT NULL,
 	cx1 DOUBLE NOT NULL,
 	cx2 DOUBLE NOT NULL,
@@ -15,6 +16,12 @@ create table Gray_Surf (
 	PRIMARY KEY (ccdExposureId)
 );
 
+create table NonGray_Extinction (
+	ccdExposureId BIGINT NOT NULL,
+	kNonGray DOUBLE NOT NULL,
+	PRIMARY KEY (ccdExposureId)
+);
+	
 create table DIA_Poly (
 	diaSourceId BIGINT NOT NULL,
 	valx1 DOUBLE NOT NULL,
