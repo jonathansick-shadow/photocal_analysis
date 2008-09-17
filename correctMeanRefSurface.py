@@ -5,10 +5,12 @@ Association PL, and subsequently by fitGray, etc,
 calculate the shape of the gray extinction surface for the reference
 exposure, from the weighted mean of the other exposure shapes.
 
+Then, subtracts the reference surface from all surface entries in Gray_Surf
+
 Reference for std. error of weighted mean:  J. Scarborough, American Math. Monthly,
 42, 286(1935), found on JStor
 
-Run as getMeanRefSurface.py <db> <refExp>
+Run as correctMeanRefSurface.py <db> <refExp>
 """
 import string, sys, os
 import glob
@@ -36,7 +38,7 @@ c=db.cursor()
 #
 # Get the needed objects
 #
-query = "SELECT c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma from Gray_Surf  WHERE NOT ccdExposureId = %s " % refExposure
+query = "SELECT c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma from Gray_Surf WHERE NOT ccdExposureId = %s " % refExposure
 
 c.execute(query)
 
@@ -68,7 +70,6 @@ for s in coeffList:
     cy2_sigma.append(s[9])
     cxy_sigma.append(s[11])
 
-
 c0_vari = 1.0/array(c0_sigma)**2
 cx1_vari = 1.0/array(cx1_sigma)**2
 cx2_vari = 1.0/array(cx2_sigma)**2
@@ -99,6 +100,14 @@ print "cy2:", cy2_wt,  " +/- ", cy2_wt_sigma
 cxy_wt = sum(array(cxy)*cxy_vari)/sum(cxy_vari)
 cxy_wt_sigma = 1.0 / sqrt(sum(cxy_vari))
 print "cxy:", cxy_wt,  " +/- ", cxy_wt_sigma
+
+#
+# Now correct all the entries in Gray_Surf
+# 
+query = "UPDATE Gray_Surf SET cx1=cx1-(%f), cx2=cx2-(%f), cy1=cy1-(%f), cy2=cy2-(%f), cxy=cxy-(%f)" % (cx1_wt, cx2_wt, cy1_wt, cy2_wt, cxy_wt)
+print query
+
+c.execute(query)
 
 
 

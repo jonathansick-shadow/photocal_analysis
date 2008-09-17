@@ -1,0 +1,16 @@
+update Object o set gMag = (SELECT avg(apMag) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 1);
+update Object o set rMag = (SELECT avg(apMag) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 2);
+update Object o set iMag = (SELECT avg(apMag) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 3);
+update Object o set zMag = (SELECT avg(apMag) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 4);
+update Object o set gMagErr = (SELECT stddev_pop(apMag) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 1);
+update Object o set rMagErr = (SELECT stddev_pop(apMag) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 2);
+update Object o set iMagErr = (SELECT stddev_pop(apMag) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 3);
+update Object o set zMagErr = (SELECT stddev_pop(apMag) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 4);
+update Object o set gErrA = (SELECT avg(psfMagErr) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 1);
+update Object o set rErrA = (SELECT avg(psfMagErr) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 2);
+update Object o set iErrA = (SELECT avg(psfMagErr) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 3);
+update Object o set zErrA = (SELECT avg(psfMagErr) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 4);
+update Object o set gErrB = (SELECT stddev_pop(psfMagErr) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 1);
+update Object o set rErrB = (SELECT stddev_pop(psfMagErr) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 2);
+update Object o set iErrB = (SELECT stddev_pop(psfMagErr) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 3);
+update Object o set zErrB = (SELECT stddev_pop(psfMagErr) from DIASource ds WHERE ds.objectId = o.objectId and ds.filterId = 4);

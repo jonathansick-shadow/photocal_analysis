@@ -12,7 +12,7 @@ import glob
 import re
 import math
 import MySQLdb
-from numarray import *
+from numpy import *
 from rpy import r
 import rpy
 #
@@ -43,9 +43,9 @@ expList = c.fetchall()
 
 values = ""
 
-# TRUNCATE DIA_Poly here
-query = "TRUNCATE DIA_Poly"
-c.execute(query)
+# TRUNCATE DIA_Poly here - but make it optional
+#query = "TRUNCATE DIA_Poly"
+#c.execute(query)
 
 for e in expList:
     exp = e[0]
@@ -56,6 +56,8 @@ for e in expList:
     if len(surfPoints) < 20:
         print "Ignoring exposure %s" % exp
         continue
+    else:
+        print "%d points for exposure %s" % (len(surfPoints), exp)
     
     py_id = []
     py_x = []
@@ -118,7 +120,11 @@ for e in expList:
     if values: values = values + ","
     values = values + "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" % (exp, refExp, c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma)
 
-query = "TRUNCATE Gray_Surf; INSERT INTO Gray_Surf (ccdExposureId, refExposureId, c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma ) VALUES " + values
+# TRUNCATE Gray_Surf here - but make it optional
+#query = "TRUNCATE Gray_Surf"
+#c.execute(query)
+
+query = "INSERT INTO Gray_Surf (ccdExposureId, refExposureId, c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma ) VALUES " + values
 #print query
 c.execute(query)
 
