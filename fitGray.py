@@ -49,7 +49,7 @@ values = ""
 
 for e in expList:
     exp = e[0]
-    query = "SELECT ds1.diaSourceId, ds1.colc, ds1.rowc, ds1.modelMag-ds2.ModelMag, ds1.psfMagErr, ds2.psfMagErr FROM DIASource as ds1, DIASource as ds2 where ds1.ccdExposureId=%s and ds2.ccdExposureId=%s and ds1.objectId=ds2.objectId" % (exp, refExp)
+    query = "SELECT ds1.diaSourceId, ds1.colc, ds1.rowc, ds1.modelMag-ds2.ModelMag, ds1.psfMagErr, ds2.psfMagErr FROM DIASource as ds1, DIASource as ds2 where ds1.ccdExposureId=%s and ds2.ccdExposureId=%s and ds1.filterId=ds2.filterId and ds1.objectId=ds2.objectId" % (exp, refExp)
     c.execute(query)
     surfPoints = c.fetchall()
     # The field for exp may have no overlap with refExp.  If not, ignore
