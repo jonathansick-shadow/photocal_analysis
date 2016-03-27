@@ -7,7 +7,9 @@ that describe the surface in the db table GraySurf
 
 Run as fitGray <db_name> <ref_exp>
 """
-import string, sys, os
+import string
+import sys
+import os
 import glob
 import re
 import math
@@ -31,7 +33,7 @@ refExp = sys.argv[2]
 
 # open the DB
 db = MySQLdb.connect(host=mySqlHost, user=mySqlUser, passwd=mySqlPasswd, db=mySqlDb)
-c=db.cursor()
+c = db.cursor()
 
 # get the list of exposures
 
@@ -45,11 +47,12 @@ values = ""
 
 # TRUNCATE DIA_Poly here - but make it optional
 #query = "TRUNCATE DIA_Poly"
-#c.execute(query)
+# c.execute(query)
 
 for e in expList:
     exp = e[0]
-    query = "SELECT ds1.diaSourceId, ds1.colc, ds1.rowc, ds1.modelMag-ds2.ModelMag, ds1.psfMagErr, ds2.psfMagErr FROM DIASource as ds1, DIASource as ds2 where ds1.ccdExposureId=%s and ds2.ccdExposureId=%s and ds1.filterId=ds2.filterId and ds1.objectId=ds2.objectId" % (exp, refExp)
+    query = "SELECT ds1.diaSourceId, ds1.colc, ds1.rowc, ds1.modelMag-ds2.ModelMag, ds1.psfMagErr, ds2.psfMagErr FROM DIASource as ds1, DIASource as ds2 where ds1.ccdExposureId=%s and ds2.ccdExposureId=%s and ds1.filterId=ds2.filterId and ds1.objectId=ds2.objectId" % (
+        exp, refExp)
     c.execute(query)
     surfPoints = c.fetchall()
     # The field for exp may have no overlap with refExp.  If not, ignore
@@ -58,7 +61,7 @@ for e in expList:
         continue
     else:
         print "%d points for exposure %s" % (len(surfPoints), exp)
-    
+
     py_id = []
     py_x = []
     py_y = []
@@ -76,20 +79,21 @@ for e in expList:
 
     # Now need to evaluate poly's at py_x and py_y, insert into DIA_Poly
 
-    poly_x_vals = array(r.poly(py_x, 2)) # poly_x_vals is a matrix with two columns, for x^1, x^2
-    poly_y_vals = array(r.poly(py_y, 2)) # poly_y_vals is a matrix with two columns, for y^1, y^2
-    poly_xy_vals = array(r.poly(py_xy, 1)) # poly_xy_vals is a matrix with one column
+    poly_x_vals = array(r.poly(py_x, 2))  # poly_x_vals is a matrix with two columns, for x^1, x^2
+    poly_y_vals = array(r.poly(py_y, 2))  # poly_y_vals is a matrix with two columns, for y^1, y^2
+    poly_xy_vals = array(r.poly(py_xy, 1))  # poly_xy_vals is a matrix with one column
     query = "INSERT INTO DIA_Poly (diaSourceId, valx1, valx2, valy1, valy2, valxy) VALUES "
     poly_values = ""
     # make list of x,y pairs from poly_x_vals, poly_y_vals
-    i=0
+    i = 0
     for id in py_id:
-        x1 = poly_x_vals[i,0]
-        x2 = poly_x_vals[i,1]
-        y1 = poly_y_vals[i,0]
-        y2 = poly_y_vals[i,1]
+        x1 = poly_x_vals[i, 0]
+        x2 = poly_x_vals[i, 1]
+        y1 = poly_y_vals[i, 0]
+        y2 = poly_y_vals[i, 1]
         xy = poly_xy_vals[i]
-        if poly_values: poly_values = poly_values + ","
+        if poly_values:
+            poly_values = poly_values + ","
         poly_values += "(%s, %f, %f, %f, %f, %f)" % (id, x1, x2, y1, y2, xy)
         i = i+1
 
@@ -97,14 +101,14 @@ for e in expList:
 #    print query
     c.execute(query)
 
-    
-    model = r.lm(r("delta ~ poly(x, 2) + poly(y, 2) + poly(x*y, 1)"), data=r.data_frame(x=py_x, y=py_y, delta=py_delta), weights=py_wt)
+    model = r.lm(r("delta ~ poly(x, 2) + poly(y, 2) + poly(x*y, 1)"),
+                 data=r.data_frame(x=py_x, y=py_y, delta=py_delta), weights=py_wt)
     model_summary = r.summary(model)
     model_coeff = array(model_summary['coefficients'])
-    if not model_coeff.shape == (6,4):
+    if not model_coeff.shape == (6, 4):
         print "Bad model for %s" % exp
         continue
-    
+
     c0 = model_coeff[0][0]
     c0_sigma = model_coeff[0][1]
     cx1 = model_coeff[1][0]
@@ -117,15 +121,17 @@ for e in expList:
     cy2_sigma = model_coeff[4][1]
     cxy = model_coeff[5][0]
     cxy_sigma = model_coeff[5][1]
-    if values: values = values + ","
-    values = values + "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" % (exp, refExp, c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma)
+    if values:
+        values = values + ","
+    values = values + "(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" % (exp, refExp,
+                                                                                    c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma)
 
 # TRUNCATE Gray_Surf here - but make it optional
 #query = "TRUNCATE Gray_Surf"
-#c.execute(query)
+# c.execute(query)
 
 query = "INSERT INTO Gray_Surf (ccdExposureId, refExposureId, c0, c0_sigma, cx1, cx1_sigma, cx2, cx2_sigma, cy1, cy1_sigma, cy2, cy2_sigma, cxy, cxy_sigma ) VALUES " + values
-#print query
+# print query
 c.execute(query)
 
 

@@ -10,7 +10,9 @@ Reference for std. error of weighted mean:  J. Scarborough, American Math. Month
 
 Run as getMeanRefSurface.py <db> <refExp>
 """
-import string, sys, os
+import string
+import sys
+import os
 import glob
 import re
 import math
@@ -32,7 +34,7 @@ refExposure = sys.argv[2]
 #
 db = MySQLdb.connect(host=mySqlHost, user=mySqlUser, passwd=mySqlPasswd, db=mySqlDb)
 
-c=db.cursor()
+c = db.cursor()
 #
 # Get the needed objects
 #
@@ -82,23 +84,23 @@ print "c0:", c0_wt, " +/- ", c0_wt_sigma
 
 cx1_wt = sum(array(cx1)*cx1_vari)/sum(cx1_vari)
 cx1_wt_sigma = 1.0 / sqrt(sum(cx1_vari))
-print "cx1:", cx1_wt,  " +/- ", cx1_wt_sigma
+print "cx1:", cx1_wt, " +/- ", cx1_wt_sigma
 
 cx2_wt = sum(array(cx2)*cx2_vari)/sum(cx2_vari)
 cx2_wt_sigma = 1.0 / sqrt(sum(cx2_vari))
-print "cx2:", cx2_wt,  " +/- ", cx2_wt_sigma
+print "cx2:", cx2_wt, " +/- ", cx2_wt_sigma
 
 cy1_wt = sum(array(cy1)*cy1_vari)/sum(cy1_vari)
 cy1_wt_sigma = 1.0 / sqrt(sum(cy1_vari))
-print "cy1:", cy1_wt,  " +/- ", cy1_wt_sigma
+print "cy1:", cy1_wt, " +/- ", cy1_wt_sigma
 
 cy2_wt = sum(array(cy2)*cy2_vari)/sum(cy2_vari)
 cy2_wt_sigma = 1.0 / sqrt(sum(cy2_vari))
-print "cy2:", cy2_wt,  " +/- ", cy2_wt_sigma
+print "cy2:", cy2_wt, " +/- ", cy2_wt_sigma
 
 cxy_wt = sum(array(cxy)*cxy_vari)/sum(cxy_vari)
 cxy_wt_sigma = 1.0 / sqrt(sum(cxy_vari))
-print "cxy:", cxy_wt,  " +/- ", cxy_wt_sigma
+print "cxy:", cxy_wt, " +/- ", cxy_wt_sigma
 
 
 

@@ -6,7 +6,9 @@ by the Association pipeline
 
 Run as AbiToLSST.py dirName
 """
-import string, sys, os
+import string
+import sys
+import os
 import glob
 import re
 import time
@@ -14,6 +16,8 @@ import ephem
 import math
 #
 # Date string is expected to be like: 2008-04-25T21:37:20
+
+
 def calcMJD(dateStr):
     stripFracSecRE = re.compile(r'([^\.]+)')
     match = stripFracSecRE.match(dateStr)
@@ -21,11 +25,12 @@ def calcMJD(dateStr):
     dateStrForEphem = time.strftime('%Y/%m/%d %H:%M:%S', timeTuple)
     dayNum = ephem.Date(dateStrForEphem)
     return dayNum + 15019.5
-    
-    
+
+
 def lookupFilter(filtName):
-    filters = {'u':0, 'g':1, 'r':2, 'i':3, 'z':4, 'y':5}
+    filters = {'u': 0, 'g': 1, 'r': 2, 'i': 3, 'z': 4, 'y': 5}
     return filters[filtName]
+
 
 def getValues(fileName, varList):
     lines = open(fileName).readlines()
@@ -34,27 +39,29 @@ def getValues(fileName, varList):
     for var in varList:
         varRE = re.compile(r'^' + var + r'\s*=\s*([\S]+)')
         for line in lines:
-            match=varRE.match(line)
+            match = varRE.match(line)
             if match:
                 value = match.group(1)
                 match2 = fitsStringRE.match(value)
                 if match2:
                     value = match2.group(1)
                 valList.append(value)
-            
+
     return valList
 
-def execQuery(mySqlQuery, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb ):
 
-    mySqlCmd = 'mysql -h %s -u %s -p%s -e \'%s\' %s' % (mySqlHost, mySqlUser, mySqlPasswd, mySqlQuery, mySqlDb)
+def execQuery(mySqlQuery, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb):
+
+    mySqlCmd = 'mysql -h %s -u %s -p%s -e \'%s\' %s' % (mySqlHost,
+                                                        mySqlUser, mySqlPasswd, mySqlQuery, mySqlDb)
 
     print os.popen(mySqlCmd).read()
-    
+
 
 def createMopsPredTable(obsNum):
     MopsPredTableName = 'MopsPreds_visit%s' % obsNum
     createTableCmd = \
-                   'DROP TABLE IF EXISTS %s; \
+        'DROP TABLE IF EXISTS %s; \
                    CREATE TABLE %s ( \
                    orbit_id BIGINT NOT NULL, \
                    ra_deg DOUBLE NOT NULL, \
@@ -68,14 +75,15 @@ def createMopsPredTable(obsNum):
                    ) TYPE=MyISAM;' % (MopsPredTableName, MopsPredTableName)
 
 #    if debug: print createTableCmd
-    if not debug: execQuery(createTableCmd, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)
+    if not debug:
+        execQuery(createTableCmd, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)
 
-    
+
 def createDIASourceTable(obsNum, filterNum, catFile, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb):
     maxChunk = 1000
     DIATableName = 'DiaSources_visit%s' % obsNum
     createTableCmd = \
-                   'DROP TABLE IF EXISTS %s; \
+        'DROP TABLE IF EXISTS %s; \
                    CREATE TABLE %s ( \
                    diaSourceId BIGINT NOT NULL, \
                    ccdExposureId BIGINT NOT NULL, \
@@ -133,7 +141,8 @@ def createDIASourceTable(obsNum, filterNum, catFile, mySqlHost, mySqlUser, mySql
                    ) TYPE=MyISAM;' % (DIATableName, DIATableName)
 
 #    if debug: print createTableCmd
-    if not debug: execQuery(createTableCmd, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)
+    if not debug:
+        execQuery(createTableCmd, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)
 
     # process the catalog file for values to put into DIASource table
 
@@ -141,29 +150,32 @@ def createDIASourceTable(obsNum, filterNum, catFile, mySqlHost, mySqlUser, mySql
     catLines = open(catFile).readlines()
 
     print "%d sources for exposure %d" % (len(catLines), obsNum)
-    if len(catLines)==0:
+    if len(catLines) == 0:
         print "\tNo sources for exposure %d!" % obsNum
         return
 
-    nSources = 0;
+    nSources = 0
     while len(catLines) > 0:
         chunkLines = catLines[0:maxChunk]
         del catLines[0:maxChunk]
         insertCmd = ''
         for line in chunkLines:
-            if commentRE.match(line)==None:
+            if commentRE.match(line) == None:
                 (seq, flag, ra, dec, mag, magErr, stuff) = line.split(None, 6)
-                if int(flag)==1:
+                if int(flag) == 1:
                     id = obsNum*100000 + int(seq)
                     if insertCmd == '':
-                        insertCmd = 'INSERT INTO \'%s\' (diaSourceId, ccdExposureId, filterId, ra, decl, psfMag, psfMagErr) VALUES ' % (DIATableName)
-                    insertCmd += '(%d,%d,%d,%.5f,%.5f,%.3f,%.3f),' % (id, obsNum, filterNum, float(ra), float(dec), float(mag), float(magErr))
+                        insertCmd = 'INSERT INTO \'%s\' (diaSourceId, ccdExposureId, filterId, ra, decl, psfMag, psfMagErr) VALUES ' % (
+                            DIATableName)
+                    insertCmd += '(%d,%d,%d,%.5f,%.5f,%.3f,%.3f),' % (id, obsNum, filterNum,
+                                                                      float(ra), float(dec), float(mag), float(magErr))
                     nSources += 1
-                    
+
         insertCmd2 = insertCmd.rstrip(',') + ';'
 
 #        if debug: print insertCmd2
-        if not debug: execQuery(insertCmd2, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)
+        if not debug:
+            execQuery(insertCmd2, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)
 
     print "%d used sources for exposure %d" % (nSources, obsNum)
 
@@ -201,18 +213,22 @@ for headFile in headList:
     obsNum = int(obsNumMatch.group(1))
     # get values we need from headFile
     (raDeg, decDeg, filtName, date, am, exp, epoch) = getValues(headFile,
-          ['CRVAL1', 'CRVAL2', 'FILTER2', 'DATE-OBS', 'AIRMASS', 'EXPTIME', 'EPOCH'])
+                                                                ['CRVAL1', 'CRVAL2', 'FILTER2', 'DATE-OBS', 'AIRMASS', 'EXPTIME', 'EPOCH'])
     # calculate MJD from date
     mjd = calcMJD(date)
     filtNum = lookupFilter(filtName)
-    print >>exposureListFile, obsNum, float(raDeg), float(decDeg), filtName, mjd, date, float(am), float(exp), float(epoch)
+    print >>exposureListFile, obsNum, float(raDeg), float(
+        decDeg), filtName, mjd, date, float(am), float(exp), float(epoch)
     if not insertVals == '':
         insertVals += ','
-    insertVals += '(%d, %.7f, %.7f, %d, %.7f, \'%s\', %.5f, %.2f, %.2f)' % (obsNum, float(raDeg), float(decDeg), filtNum, float(epoch), date, mjd, float(exp), float(am))
+    insertVals += '(%d, %.7f, %.7f, %d, %.7f, \'%s\', %.5f, %.2f, %.2f)' % (obsNum, float(raDeg),
+                                                                            float(decDeg), filtNum, float(epoch), date, mjd, float(exp), float(am))
     # must pass obsNum and filtNum to createDIASourceTable
     createDIASourceTable(obsNum, filtNum, catFile, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)
     createMopsPredTable(obsNum)
 
 insertCmd += insertVals
-if debug: print >>insertCmdFile, insertCmd
-if not debug: execQuery(insertCmd, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)
+if debug:
+    print >>insertCmdFile, insertCmd
+if not debug:
+    execQuery(insertCmd, mySqlHost, mySqlUser, mySqlPasswd, mySqlDb)

@@ -5,7 +5,9 @@ Association PL, prepare the input file that will be used by FindGray
 
 Run as preparefindGray <db_name>
 """
-import string, sys, os
+import string
+import sys
+import os
 import glob
 import re
 import math
@@ -31,7 +33,7 @@ mySqlDb = sys.argv[1]
 
 db = MySQLdb.connect(host=mySqlHost, user=mySqlUser, passwd=mySqlPasswd, db=mySqlDb)
 
-c=db.cursor()
+c = db.cursor()
 
 # First, get all the Objects
 
@@ -56,7 +58,7 @@ for o in objList:
     goodFilters[2] = (rNumObs > minrObs)
     goodFilters[3] = (iNumObs > miniObs)
     goodFilters[4] = (zNumObs > minzObs)
-    
+
     c.execute("""SELECT ds.diaSourceId, ex.mjdObs, ex.airmass, ds.filterId, ds.psfMag, ds.psfMagErr from DIASource as ds, \
               Raw_FPA_Exposure as ex WHERE ds.objectId = %s AND ex.rawFPAExposureId = ds.ccdExposureId""", (objectId,))
     srcList = c.fetchall()
@@ -69,13 +71,13 @@ for o in objList:
         magErr = s[5]
         if goodFilters[filterId]:
             if objIdByFilter[filterId] == -1:
-                objIdByFilter[filterId] = oFCount;
-                oFCount += 1;
+                objIdByFilter[filterId] = oFCount
+                oFCount += 1
             correctedMag = mag - extinction[filterId]*airMass
             correctedFlux = 10**(-0.4*correctedMag)
             flux = 10**(-0.4*mag)
             fluxErr = flux*(1.0 - 10**(-0.4*magErr))
             print sourceId, objIdByFilter[filterId], mjd, correctedFlux, fluxErr
 
-        
+
 

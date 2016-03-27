@@ -6,7 +6,9 @@ in the specified db
 
 Run as loadGray <db_name> <gray_file>
 """
-import string, sys, os
+import string
+import sys
+import os
 import glob
 import re
 import math
@@ -23,7 +25,7 @@ grayFile = sys.argv[2]
 
 # open the DB
 db = MySQLdb.connect(host=mySqlHost, user=mySqlUser, passwd=mySqlPasswd, db=mySqlDb)
-c=db.cursor()
+c = db.cursor()
 
 # Get all the pairs from the input file
 

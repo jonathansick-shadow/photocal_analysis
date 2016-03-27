@@ -10,12 +10,15 @@ Note that "psfMag" = uncorrected instrumental mag
           "modelMag" = corrected for nongray (wavelength dependent) extinction
           "apMag" = corrected for gray and nongray extinction
 """
-import string, sys, os
+import string
+import sys
+import os
 import glob
 import re
 import math
 from numpy.numarray import array
 import MySQLdb
+
 
 def getLC(mySqlDb, objectId, filter):
     #
@@ -23,24 +26,25 @@ def getLC(mySqlDb, objectId, filter):
     mySqlHost = 'lsst10.ncsa.uiuc.edu'
     mySqlUser = 'test'
     mySqlPasswd = 'globular.test'
-    
+
     #
-    filterMap = { "u":0, "g":1, "r":2, "i":3, "z":4 }
-    
+    filterMap = {"u": 0, "g": 1, "r": 2, "i": 3, "z": 4}
+
     filterId = filterMap[filter]
     #
     # Set up connection to db
     #
     db = MySQLdb.connect(host=mySqlHost, user=mySqlUser, passwd=mySqlPasswd, db=mySqlDb)
-    
-    c=db.cursor()
+
+    c = db.cursor()
     #
     # Get the needed objects
     #
-    query = "SELECT ex.mjdObs, ds.modelMag, ds.apMag, ds.rowc, ds.colc, ex.airmass, gs.c0, gs.cx1, gs.cx2, gs.cy1, gs.cy2, gs.cxy, ex.rawFPAExposureId from DIASource as ds, Raw_FPA_Exposure as ex, Gray_Surf as gs  where ds.objectId=%s and ds.filterId=%d and ex.rawFPAExposureId=ds.ccdExposureId and gs.ccdExposureId=ex.rawFPAExposureId" % (objectId, filterId)
-    
+    query = "SELECT ex.mjdObs, ds.modelMag, ds.apMag, ds.rowc, ds.colc, ex.airmass, gs.c0, gs.cx1, gs.cx2, gs.cy1, gs.cy2, gs.cxy, ex.rawFPAExposureId from DIASource as ds, Raw_FPA_Exposure as ex, Gray_Surf as gs  where ds.objectId=%s and ds.filterId=%d and ex.rawFPAExposureId=ds.ccdExposureId and gs.ccdExposureId=ex.rawFPAExposureId" % (
+        objectId, filterId)
+
     c.execute(query)
-    
+
     srcList = c.fetchall()
     mjd = []
     corr1Mag = []
@@ -70,9 +74,7 @@ def getLC(mySqlDb, objectId, filter):
         cy2.append(s[10])
         cxy.append(s[11])
         expId.append(s[12])
-        
-        
-        
+
     return (array(mjd), array(corr1Mag), array(corr2Mag), array(colc), array(rowc), array(airmass), array(c0), array(cx1), array(cx2), array(cy1), array(cy2), array(cxy), array(expId))
 
 
